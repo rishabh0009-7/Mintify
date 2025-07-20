@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { BackgroundLines } from "@/components/ui/background-lines";
+import { StarsBackground } from "@/components/animate-ui/backgrounds/stars";
 
 
 export default function LandingPage() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-black text-white px-4">
+      <StarsBackground />
       {/* Heading */}
       <h1 className="text-4xl sm:text-6xl font-extrabold mb-6 text-center">
         Launch Your Token in Seconds 🚀
