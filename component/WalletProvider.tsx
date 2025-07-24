@@ -1,4 +1,4 @@
-"use client";
+
 import './App.css'
 
 // wallet adapter imports

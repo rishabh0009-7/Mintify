@@ -1,5 +1,7 @@
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 
 export function Navbar() {
   return (
@@ -42,7 +44,10 @@ export function Navbar() {
             size="lg"
             className="relative px-8 py-2.5 font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:via-indigo-500 hover:to-blue-500 text-white shadow-lg hover:shadow-purple-500/25 transition-all duration-300 ease-out transform hover:scale-105 rounded-xl border border-purple-500/20"
           >
-            <span className="relative z-10">Connect Wallet</span>
+            <span className="relative z-10">
+              Connect 
+       
+            </span>
             <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 opacity-0 hover:opacity-100 transition-opacity rounded-xl blur-sm"></div>
           </Button>
         </div>
