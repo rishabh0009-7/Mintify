@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/component/Navbar ";
 
+import { WalletProviders } from "@/component/WalletProvider";
 
 
 const geistSans = Geist({
@@ -33,10 +34,12 @@ export default function RootLayout({
       >
         
     
+<WalletProviders>
 
         <Navbar/>
         {children}
         
+</WalletProviders>
     
 
         

@@ -1,3 +1,4 @@
+'use client';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";

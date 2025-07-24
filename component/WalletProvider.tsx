@@ -1,35 +1,50 @@
+"use client";
 
-import './App.css'
-
-// wallet adapter imports
+import { useMemo, ReactNode } from 'react';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
-import {
-    WalletModalProvider,
-    WalletDisconnectButton,
-    WalletMultiButton
-} from '@solana/wallet-adapter-react-ui';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
+import { 
+  PhantomWalletAdapter,
+  SolflareWalletAdapter,
+  TorusWalletAdapter,
+  LedgerWalletAdapter,
+
+} from '@solana/wallet-adapter-wallets';
+import { clusterApiUrl } from '@solana/web3.js';
+
+// Import wallet adapter CSS
 import '@solana/wallet-adapter-react-ui/styles.css';
 
-function App() {
-  return (
-    <div style={{width: "100vw"}}>
-      <ConnectionProvider endpoint={"https://api.devnet.solana.com"}>
-        <WalletProvider wallets={[]} autoConnect>
-            <WalletModalProvider>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                padding: 20
-              }}>
-                <WalletMultiButton />
-                <WalletDisconnectButton />
-              </div>
-          
-            </WalletModalProvider>
-        </WalletProvider>
-      </ConnectionProvider>
-    </div>
-  )
+interface WalletProvidersProps {
+  children: ReactNode;
 }
 
-export default App
+export function WalletProviders({ children }: WalletProvidersProps) {
+  
+  const network = WalletAdapterNetwork.Devnet;
+  
+
+  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+  
+  // Initialize wallet adapters
+  const wallets = useMemo(
+    () => [
+      new PhantomWalletAdapter(),
+      new SolflareWalletAdapter({ network }),
+      new TorusWalletAdapter(),
+      new LedgerWalletAdapter(),
+    ],
+    [network]
+  );
+
+  return (
+    <ConnectionProvider endpoint={endpoint}>
+      <WalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>
+          {children}
+        </WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
+  );
+}
