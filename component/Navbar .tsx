@@ -25,7 +25,7 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-8">
           {[
             { href: "/airdrop", label: "Airdrop", icon: "🎁" },
-            { href: "/CreateToken", label: "Create Token", icon: "⚡" },
+            { href: "/createToken", label: "Create Token", icon: "⚡" },
             { href: "/sendToken", label: "Send Token", icon: "🚀" }
           ].map((item) => (
             <Link
