@@ -5,6 +5,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { Button } from "@/components/ui/button";
 import { Navbar } from '@/component/Navbar ';
 import { createSPLToken, TokenData, TokenCreationResult } from '@/utils/Tokencreation';
+import { PublicKey } from '@solana/web3.js';
 
 interface TokenFormData {
   name: string;
@@ -50,6 +51,12 @@ export default function CreateToken() {
 
   const handleImageUpload = (file: File) => {
     if (file && file.type.startsWith('image/')) {
+      // Check file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        setError('Image file size must be less than 2MB');
+        return;
+      }
+      
       setTokenData(prev => ({ ...prev, image: file }));
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -58,6 +65,9 @@ export default function CreateToken() {
         }
       };
       reader.readAsDataURL(file);
+      setError(''); // Clear any previous errors
+    } else {
+      setError('Please select a valid image file (PNG, JPG, GIF)');
     }
   };
 
@@ -94,11 +104,32 @@ export default function CreateToken() {
     if (tokenData.symbol.length > 10) {
       throw new Error('Symbol must be 10 characters or less');
     }
+    if (parseFloat(tokenData.supply) > 1000000000000) {
+      throw new Error('Supply cannot exceed 1 trillion tokens');
+    }
+    
+    // Validate URLs if provided - only validate non-empty URLs
+    const urlFields = ['website', 'twitter', 'discord', 'telegram'] as const;
+    for (const field of urlFields) {
+      const url = tokenData[field];
+      if (url && url.trim()) {
+        // Check if URL starts with http:// or https://
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          throw new Error(`${field} URL must start with http:// or https://`);
+        }
+        
+        try {
+          new URL(url);
+        } catch {
+          throw new Error(`Invalid ${field} URL format. Please enter a valid URL starting with http:// or https://`);
+        }
+      }
+    }
   };
 
   const handleCreateToken = async () => {
     if (!connected || !signTransaction || !publicKey) {
-      alert('Please connect your wallet first');
+      setError('Please connect your wallet first');
       return;
     }
     
@@ -110,24 +141,33 @@ export default function CreateToken() {
       // Validate form
       validateForm();
 
+      // Check wallet balance
+      const connection = new (await import('@solana/web3.js')).Connection('https://api.devnet.solana.com');
+      const balance = await connection.getBalance(publicKey);
+      const minBalance = 0.02 * 1000000000; // 0.02 SOL in lamports
+      
+      if (balance < minBalance) {
+        throw new Error('Insufficient SOL balance. You need at least 0.02 SOL for token creation.');
+      }
+
       // Create wallet object with required methods
       const walletAdapter = {
-        publicKey,
+        publicKey: publicKey as PublicKey,
         signTransaction,
       };
 
       // Convert FormData to TokenData
       const tokenDataForCreation: TokenData = {
-        name: tokenData.name,
-        symbol: tokenData.symbol,
-        description: tokenData.description,
+        name: tokenData.name.trim(),
+        symbol: tokenData.symbol.trim().toUpperCase(),
+        description: tokenData.description.trim(),
         image: tokenData.image,
         decimals: tokenData.decimals,
         supply: tokenData.supply,
-        website: tokenData.website,
-        twitter: tokenData.twitter,
-        discord: tokenData.discord,
-        telegram: tokenData.telegram,
+        website: tokenData.website.trim(),
+        twitter: tokenData.twitter.trim(),
+        discord: tokenData.discord.trim(),
+        telegram: tokenData.telegram.trim(),
       };
 
       console.log('Creating token with data:', tokenDataForCreation);
@@ -154,7 +194,25 @@ export default function CreateToken() {
       
     } catch (err) {
       console.error('Token creation error:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create token';
+      let errorMessage = 'Failed to create token';
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      } else if (err && typeof err === 'object' && 'message' in err) {
+        errorMessage = String(err.message);
+      }
+      
+      // Handle specific Solana errors
+      if (errorMessage.includes('0x1')) {
+        errorMessage = 'Insufficient funds for transaction';
+      } else if (errorMessage.includes('0x0')) {
+        errorMessage = 'Transaction failed - please try again';
+      } else if (errorMessage.includes('blockhash')) {
+        errorMessage = 'Network congestion - please try again';
+      }
+      
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -203,18 +261,22 @@ export default function CreateToken() {
                     href={`https://explorer.solana.com/tx/${result.signature}?cluster=devnet`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-purple-400 hover:text-purple-300 underline"
+                    className="text-purple-400 hover:text-purple-300 underline break-all"
                   >
                     {result.signature}
                   </a>
                 </div>
                 <div>
                   <span className="text-zinc-400">Mint Address: </span>
-                  <span className="text-white font-mono">{result.mintAddress}</span>
+                  <span className="text-white font-mono break-all">{result.mintAddress}</span>
                 </div>
                 <div>
                   <span className="text-zinc-400">Token Account: </span>
-                  <span className="text-white font-mono">{result.tokenAccount}</span>
+                  <span className="text-white font-mono break-all">{result.tokenAccount}</span>
+                </div>
+                <div>
+                  <span className="text-zinc-400">Metadata Account: </span>
+                  <span className="text-white font-mono break-all">{result.metadataAddress}</span>
                 </div>
               </div>
             </div>
@@ -268,8 +330,10 @@ export default function CreateToken() {
                       value={tokenData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       placeholder="e.g., My Awesome Token"
+                      maxLength={32}
                       className="w-full px-4 py-3 bg-zinc-900/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
                     />
+                    <p className="text-zinc-500 text-xs mt-1">Max 32 characters</p>
                   </div>
 
                   {/* Token Symbol */}
@@ -298,8 +362,10 @@ export default function CreateToken() {
                       onChange={(e) => handleInputChange('description', e.target.value)}
                       placeholder="Describe your token's purpose and vision..."
                       rows={4}
+                      maxLength={200}
                       className="w-full px-4 py-3 bg-zinc-900/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 resize-none"
                     />
+                    <p className="text-zinc-500 text-xs mt-1">{tokenData.description.length}/200 characters</p>
                   </div>
 
                   {/* Decimals and Supply */}
@@ -328,6 +394,8 @@ export default function CreateToken() {
                         value={tokenData.supply}
                         onChange={(e) => handleInputChange('supply', e.target.value)}
                         placeholder="1000000"
+                        min="1"
+                        max="1000000000000"
                         className="w-full px-4 py-3 bg-zinc-900/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
                       />
                     </div>
@@ -359,6 +427,7 @@ export default function CreateToken() {
                         placeholder={placeholder}
                         className="w-full px-4 py-3 bg-zinc-900/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
                       />
+                      <p className="text-zinc-500 text-xs mt-1">Optional - must include http:// or https://</p>
                     </div>
                   ))}
                 </div>
@@ -495,10 +564,14 @@ export default function CreateToken() {
                       <span className="text-zinc-300">Metadata Upload:</span>
                       <span className="text-white font-bold">~0.005 SOL</span>
                     </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-zinc-300">Network Fees:</span>
+                      <span className="text-white font-bold">~0.005 SOL</span>
+                    </div>
                     <hr className="border-zinc-700" />
                     <div className="flex justify-between items-center text-lg">
                       <span className="text-white font-bold">Total:</span>
-                      <span className="text-purple-400 font-bold">~0.015 SOL</span>
+                      <span className="text-purple-400 font-bold">~0.02 SOL</span>
                     </div>
                   </div>
                 </div>
@@ -529,7 +602,7 @@ export default function CreateToken() {
               
               {connected && (
                 <p className="text-center text-zinc-400 text-sm mt-3">
-                  Make sure you have enough SOL for transaction fees
+                  Make sure you have at least 0.02 SOL for transaction fees
                 </p>
               )}
             </div>
