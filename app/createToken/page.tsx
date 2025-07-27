@@ -3,10 +3,24 @@
 import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Button } from "@/components/ui/button";
-import { Navbar } from '@/component/Navbar '; 
+import { Navbar } from '@/component/Navbar ';
+import { createSPLToken, TokenData, TokenCreationResult } from '@/utils/Tokencreation';
+
+interface TokenFormData {
+  name: string;
+  symbol: string;
+  description: string;
+  image: File | null;
+  decimals: string;
+  supply: string;
+  website: string;
+  twitter: string;
+  discord: string;
+  telegram: string;
+}
 
 export default function CreateToken() {
-  const [tokenData, setTokenData] = useState({
+  const [tokenData, setTokenData] = useState<TokenFormData>({
     name: '',
     symbol: '',
     description: '',
@@ -19,29 +33,35 @@ export default function CreateToken() {
     telegram: ''
   });
   
-  const [imagePreview, setImagePreview] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [dragActive, setDragActive] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [dragActive, setDragActive] = useState<boolean>(false);
+  const [result, setResult] = useState<TokenCreationResult | null>(null);
+  const [error, setError] = useState<string>('');
   
-  const { connected, publicKey } = useWallet();
+  const { connected, publicKey, signTransaction } = useWallet();
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (field: keyof TokenFormData, value: string | File | null) => {
     setTokenData(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
-  const handleImageUpload = (file) => {
+  const handleImageUpload = (file: File) => {
     if (file && file.type.startsWith('image/')) {
       setTokenData(prev => ({ ...prev, image: file }));
       const reader = new FileReader();
-      reader.onload = (e) => setImagePreview(e.target.result);
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setImagePreview(e.target.result as string);
+        }
+      };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleDrag = (e) => {
+  const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     if (e.type === "dragenter" || e.type === "dragover") {
@@ -51,7 +71,7 @@ export default function CreateToken() {
     }
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
@@ -61,19 +81,84 @@ export default function CreateToken() {
     }
   };
 
+  const validateForm = () => {
+    if (!tokenData.name.trim()) {
+      throw new Error('Token name is required');
+    }
+    if (!tokenData.symbol.trim()) {
+      throw new Error('Token symbol is required');
+    }
+    if (!tokenData.supply || parseFloat(tokenData.supply) <= 0) {
+      throw new Error('Supply must be greater than 0');
+    }
+    if (tokenData.symbol.length > 10) {
+      throw new Error('Symbol must be 10 characters or less');
+    }
+  };
+
   const handleCreateToken = async () => {
-    if (!connected) {
+    if (!connected || !signTransaction || !publicKey) {
       alert('Please connect your wallet first');
       return;
     }
     
     setIsLoading(true);
+    setError('');
+    setResult(null);
     
-    // Token creation logic will go here
-    setTimeout(() => {
+    try {
+      // Validate form
+      validateForm();
+
+      // Create wallet object with required methods
+      const walletAdapter = {
+        publicKey,
+        signTransaction,
+      };
+
+      // Convert FormData to TokenData
+      const tokenDataForCreation: TokenData = {
+        name: tokenData.name,
+        symbol: tokenData.symbol,
+        description: tokenData.description,
+        image: tokenData.image,
+        decimals: tokenData.decimals,
+        supply: tokenData.supply,
+        website: tokenData.website,
+        twitter: tokenData.twitter,
+        discord: tokenData.discord,
+        telegram: tokenData.telegram,
+      };
+
+      console.log('Creating token with data:', tokenDataForCreation);
+      
+      // Call the token creation service
+      const tokenResult = await createSPLToken(walletAdapter, tokenDataForCreation);
+      
+      setResult(tokenResult);
+      
+      // Reset form on success
+      setTokenData({
+        name: '',
+        symbol: '',
+        description: '',
+        image: null,
+        decimals: '9',
+        supply: '',
+        website: '',
+        twitter: '',
+        discord: '',
+        telegram: ''
+      });
+      setImagePreview('');
+      
+    } catch (err) {
+      console.error('Token creation error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create token';
+      setError(errorMessage);
+    } finally {
       setIsLoading(false);
-      alert('Token creation functionality will be implemented!');
-    }, 2000);
+    }
   };
 
   return (
@@ -106,6 +191,42 @@ export default function CreateToken() {
               <span className="text-zinc-300 font-medium"> Professional, secure, and instant.</span>
             </p>
           </div>
+
+          {/* Success Result */}
+          {result && (
+            <div className="mb-8 p-6 bg-green-900/20 border border-green-500/30 rounded-2xl">
+              <h3 className="text-xl font-bold text-green-400 mb-4">✅ Token Created Successfully!</h3>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="text-zinc-400">Transaction: </span>
+                  <a 
+                    href={`https://explorer.solana.com/tx/${result.signature}?cluster=devnet`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-purple-400 hover:text-purple-300 underline"
+                  >
+                    {result.signature}
+                  </a>
+                </div>
+                <div>
+                  <span className="text-zinc-400">Mint Address: </span>
+                  <span className="text-white font-mono">{result.mintAddress}</span>
+                </div>
+                <div>
+                  <span className="text-zinc-400">Token Account: </span>
+                  <span className="text-white font-mono">{result.tokenAccount}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Error Display */}
+          {error && (
+            <div className="mb-8 p-6 bg-red-900/20 border border-red-500/30 rounded-2xl">
+              <h3 className="text-xl font-bold text-red-400 mb-2">❌ Error</h3>
+              <p className="text-red-300">{error}</p>
+            </div>
+          )}
 
           {/* Main Form Container */}
           <div className="bg-zinc-900/60 backdrop-blur-xl border border-zinc-800/50 rounded-3xl p-8 shadow-2xl">
@@ -221,19 +342,19 @@ export default function CreateToken() {
                   </h3>
                   
                   {[
-                    { field: 'website', label: 'Website', placeholder: 'https://yourtoken.com', icon: '🌐' },
-                    { field: 'twitter', label: 'Twitter', placeholder: 'https://twitter.com/yourtoken', icon: '🐦' },
-                    { field: 'discord', label: 'Discord', placeholder: 'https://discord.gg/yourtoken', icon: '💬' },
-                    { field: 'telegram', label: 'Telegram', placeholder: 'https://t.me/yourtoken', icon: '📱' }
+                    { field: 'website' as keyof TokenFormData, label: 'Website', placeholder: 'https://yourtoken.com', icon: '🌐' },
+                    { field: 'twitter' as keyof TokenFormData, label: 'Twitter', placeholder: 'https://twitter.com/yourtoken', icon: '🐦' },
+                    { field: 'discord' as keyof TokenFormData, label: 'Discord', placeholder: 'https://discord.gg/yourtoken', icon: '💬' },
+                    { field: 'telegram' as keyof TokenFormData, label: 'Telegram', placeholder: 'https://t.me/yourtoken', icon: '📱' }
                   ].map(({ field, label, placeholder, icon }) => (
                     <div key={field} className="mb-4">
-                      <label className=" block text-white font-semibold mb-2 text-sm flex items-center gap-2">
+                      <label className="block text-white font-semibold mb-2 text-sm flex items-center gap-2">
                         <span>{icon}</span>
                         {label}
                       </label>
                       <input
                         type="url"
-                        value={tokenData[field]}
+                        value={tokenData[field] as string}
                         onChange={(e) => handleInputChange(field, e.target.value)}
                         placeholder={placeholder}
                         className="w-full px-4 py-3 bg-zinc-900/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
@@ -293,7 +414,7 @@ export default function CreateToken() {
                           <input
                             type="file"
                             accept="image/*"
-                            onChange={(e) => e.target.files[0] && handleImageUpload(e.target.files[0])}
+                            onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
                             className="hidden"
                             id="image-upload"
                           />
