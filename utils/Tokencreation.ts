@@ -260,7 +260,7 @@ import {
       const signedTransaction = await wallet.signTransaction(transaction);
       console.log('✍️ Got wallet signature');
   
-      // Send transaction
+      //9 Send transaction
       const signature = await connection.sendRawTransaction(
         signedTransaction.serialize(),
         {
@@ -271,7 +271,7 @@ import {
   
       console.log('📡 Transaction sent:', signature);
   
-      // Confirm transaction
+      // 10 Confirm transaction
       const confirmation = await connection.confirmTransaction({
         signature,
         blockhash,
@@ -282,7 +282,7 @@ import {
         throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
       }
   
-      console.log('✅ Token created successfully!');
+      console.log('Token created successfully!');
   
       // Now try to add metadata in a separate transaction
       let metadataAddress = '';
