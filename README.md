@@ -1,36 +1,110 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mintify 🚀
 
-## Getting Started
+A modern web platform for Solana token operations - create tokens, request airdrops, and send tokens with ease.
+<img width="1906" height="868" alt="image" src="https://github.com/user-attachments/assets/1e9c6df9-c32f-4ccd-9b15-c351b5e07312" />
+<img width="1910" height="876" alt="image" src="https://github.com/user-attachments/assets/5e3d3044-0f41-46cd-8153-33a9aa677a30" />
+<img width="1886" height="846" alt="image" src="https://github.com/user-attachments/assets/e89a6fad-7f97-488f-acfb-30f20daf1846" />
+<img width="1908" height="812" alt="image" src="https://github.com/user-attachments/assets/1729817f-84fd-42cd-8ed2-94a5e19f3c31" />
 
-First, run the development server:
+
+
+
+
+
+## ✨ Features
+
+- **🎁 SOL Airdrop** - Get free devnet SOL (up to 5 SOL)
+- **🪙 Token Creation** - Create SPL tokens with metadata & images
+- **💸 Token Transfer** - Send tokens to any Solana address
+- **📱 Responsive UI** - Works on desktop, tablet, and mobile
+- **🔐 Wallet Integration** - Support for all major Solana wallets
+
+## 🚀 Quick Start
 
 ```bash
+# Clone the repo
+git clone https://github.com/yourusername/mintify.git
+cd mintify
+
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) and connect your Solana wallet!
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠️ Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Frontend**: Next.js 14, React, TypeScript
+- **Styling**: Tailwind CSS
+- **Blockchain**: Solana Web3.js, Wallet Adapter
+- **UI**: Custom components with shadcn/ui
 
-## Learn More
+## 📋 Usage
 
-To learn more about Next.js, take a look at the following resources:
+1. **Connect Wallet** - Use Phantom, Solflare, or any Solana wallet
+2. **Get SOL** - Request free devnet SOL for testing
+3. **Create Tokens** - Launch custom SPL tokens with metadata
+4. **Send Tokens** - Transfer tokens to any address
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🎯 Pages
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `/` - Landing page with project overview
+- `/airdrop` - Request devnet SOL
+- `/create-token` - Create new SPL tokens
+- `/send-token` - Transfer tokens
 
-## Deploy on Vercel
+## ⚙️ Environment Setup
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Create `.env.local`:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```env
+NEXT_PUBLIC_SOLANA_NETWORK=devnet
+NEXT_PUBLIC_RPC_URL=https://api.devnet.solana.com
+```
+
+## 🔧 Development
+
+```bash
+npm run dev      # Start development server
+npm run build    # Build for production
+npm run start    # Start production server
+```
+
+## 📖 Key Features Details
+
+### Token Creation
+- Custom name, symbol, and description
+- Image upload (PNG/JPG, max 2MB)
+- Social media links
+- Configurable decimals and supply
+- Cost: ~0.02 SOL
+
+### Token Transfer
+- Real-time balance checking
+- Address validation
+- Quick amount selection (25%, 50%, 75%, Max)
+- Transaction confirmation
+
+### SOL Airdrop
+- Devnet only
+- Up to 5 SOL per request
+- Instant delivery
+- Rate limiting protection
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+
+
+## ⚠️ Disclaimer
+
+This tool is for educational and development purposes. Test on devnet before using on mainnet. Always verify recipient addresses before sending tokens.
+
