@@ -10,8 +10,12 @@ import {
   createAssociatedTokenAccountInstruction,
   createTransferInstruction,
   getAccount,
-  TokenAccountNotFoundError
+  TokenAccountNotFoundError,
+  // Assuming ParsedAccountData is available or can be imported/defined if needed
+  // If ParsedAccountData is not exported, you might need to infer its structure
+  // or use a more general 'any' type if absolutely necessary, but try to avoid.
 } from '@solana/spl-token';
+import { AccountInfo, ParsedAccountData } from '@solana/web3.js'; // Import ParsedAccountData explicitly
 
 // Simple types
 export interface SimpleTokenInfo {
@@ -37,18 +41,23 @@ export async function getUserTokens(
     const tokens: SimpleTokenInfo[] = [];
 
     for (const account of tokenAccounts.value) {
-      const info = account.account.data.parsed.info;
-      const balance = parseFloat(info.tokenAmount.uiAmount || '0');
+      // Ensure data is parsed and has info
+      if (account.account.data && 'parsed' in account.account.data && account.account.data.parsed.info) {
+        const info = (account.account.data as ParsedAccountData).parsed.info;
+        const balance = parseFloat(info.tokenAmount.uiAmount || '0');
 
-      if (balance > 0) {
-        tokens.push({
-          mint: info.mint,
-          balance: balance,
-          decimals: info.tokenAmount.decimals,
-          symbol: `${info.mint.slice(0, 4)}...`,
-          name: `Token ${info.mint.slice(0, 8)}`,
-          rawBalance: info.tokenAmount.amount
-        });
+        if (balance > 0) {
+          tokens.push({
+            mint: info.mint,
+            balance: balance,
+            decimals: info.tokenAmount.decimals,
+            symbol: `${info.mint.slice(0, 4)}...`,
+            name: `Token ${info.mint.slice(0, 8)}`,
+            rawBalance: info.tokenAmount.amount
+          });
+        }
+      } else {
+        console.warn('Skipping unparsed or incomplete token account:', account.pubkey.toBase58());
       }
     }
 
@@ -73,7 +82,15 @@ export async function getTokenBalance(
     
     // Get mint info for decimals
     const mintInfo = await connection.getParsedAccountInfo(mintPubkey);
-    const decimals = mintInfo.value?.data.parsed?.info?.decimals || 9;
+    let decimals = 9; // Default to 9
+
+    // Type check to ensure 'parsed' property exists before accessing
+    if (mintInfo.value?.data && 'parsed' in mintInfo.value.data) {
+      const parsedData = mintInfo.value.data as ParsedAccountData;
+      if (parsedData.parsed?.info?.decimals !== undefined) {
+        decimals = parsedData.parsed.info.decimals;
+      }
+    }
     
     return {
       balance: Number(accountInfo.amount) / Math.pow(10, decimals),
@@ -131,22 +148,29 @@ export async function sendTokenSimple(
     }
 
     // Check SOL balance for fees
+    // A minimum fee for a simple transaction is very small, 5000 lamports is 0.000005 SOL
+    // But account creation can cost more (around 0.002 SOL or 2,000,000 lamports)
+    // Adjust this threshold based on typical transaction costs you expect.
+    const SOL_FEE_THRESHOLD = 50000; // Increased to 0.00005 SOL to be safer
     const solBalance = await connection.getBalance(senderPublicKey);
-    if (solBalance < 5000) {
+    if (solBalance < SOL_FEE_THRESHOLD) {
       return { 
         success: false, 
-        error: 'Insufficient SOL for transaction fees. Need at least 0.000005 SOL' 
+        error: `Insufficient SOL for transaction fees. Need at least ${SOL_FEE_THRESHOLD / LAMPORTS_PER_SOL} SOL` 
       };
     }
 
-    // Check if recipient account exists
+    // Check if recipient associated token account exists
     let needCreateAccount = false;
     try {
       await getAccount(connection, recipientTokenAccount);
     } catch (error) {
       if (error instanceof TokenAccountNotFoundError) {
         needCreateAccount = true;
-        console.log('Need to create recipient token account');
+        console.log('Recipient associated token account not found, will create it.');
+      } else {
+        // Re-throw other errors
+        throw error; 
       }
     }
 
@@ -190,12 +214,15 @@ export async function sendTokenSimple(
     
     let errorMessage = 'Send failed';
     if (error instanceof Error) {
-      if (error.message.includes('insufficient funds')) {
+      // More specific error messages for common Solana errors
+      if (error.message.includes('insufficient funds') || error.message.includes('0x1771')) { // 0x1771 is a common insufficient funds error code
         errorMessage = 'Insufficient token balance for this transfer';
-      } else if (error.message.includes('TokenAccountNotFoundError')) {
-        errorMessage = 'Token account not found';
-      } else if (error.message.includes('InvalidAccountOwner')) {
-        errorMessage = 'Invalid account owner';
+      } else if (error.message.includes('TokenAccountNotFoundError') || error.message.includes('0x3')) { // 0x3 is a common account not found error
+        errorMessage = 'Associated token account not found for recipient, and creation failed or was not attempted correctly.';
+      } else if (error.message.includes('InvalidAccountOwner') || error.message.includes('0x4')) { // 0x4 is a common invalid account owner error
+        errorMessage = 'Invalid account owner or token account is not associated with the mint.';
+      } else if (error.message.includes('Signature verification failed') || error.message.includes('Transaction simulation failed')) {
+        errorMessage = 'Transaction failed to simulate or verify. Check network conditions or sender/recipient addresses.';
       } else {
         errorMessage = error.message;
       }
