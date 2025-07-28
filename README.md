@@ -23,7 +23,7 @@ A modern web platform for Solana token operations - create tokens, request airdr
 
 ```bash
 # Clone the repo
-git clone https://github.com/yourusername/mintify.git
+git clone https://https://github.com/rishabh0009-7/Mintify
 cd mintify
 
 # Install dependencies
