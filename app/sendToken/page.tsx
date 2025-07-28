@@ -172,29 +172,29 @@ export default function SendToken() {
     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-indigo-950">
       {/* Background effects */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/4 left-1/4 w-48 h-48 sm:w-64 sm:h-64 lg:w-96 lg:h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-40 h-40 sm:w-56 sm:h-56 lg:w-80 lg:h-80 bg-indigo-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
       <Navbar />
 
-      <div className="relative z-10 flex items-center justify-center min-h-screen px-6 pt-20">
+      <div className="relative z-10 flex items-center justify-center min-h-screen px-4 sm:px-6 pt-16 sm:pt-20">
         <div className="w-full max-w-2xl mx-auto">
           
           {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl md:text-5xl font-black mb-4 bg-gradient-to-r from-white via-purple-200 to-indigo-300 bg-clip-text text-transparent">
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-3 sm:mb-4 bg-gradient-to-r from-white via-purple-200 to-indigo-300 bg-clip-text text-transparent">
               Send Tokens
             </h1>
-            <p className="text-zinc-400 text-lg">Transfer tokens to any Solana address</p>
+            <p className="text-zinc-400 text-base sm:text-lg">Transfer tokens to any Solana address</p>
           </div>
 
           {/* Main card */}
-          <div className="bg-zinc-900/60 backdrop-blur-xl border border-zinc-800/50 rounded-3xl p-8 shadow-2xl">
+          <div className="bg-zinc-900/60 backdrop-blur-xl border border-zinc-800/50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-2xl">
             
             {/* Wallet status */}
             {connected ? (
-              <div className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-2xl">
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-500/10 border border-green-500/20 rounded-xl sm:rounded-2xl">
                 <p className="text-green-400 font-semibold text-sm">✅ Wallet Connected</p>
                 <p className="text-zinc-300 font-mono text-xs">
                   {publicKey?.toString().slice(0, 8)}...{publicKey?.toString().slice(-8)}
@@ -209,7 +209,7 @@ export default function SendToken() {
                 )}
               </div>
             ) : (
-              <div className="mb-6 p-4 bg-orange-500/10 border border-orange-500/20 rounded-2xl">
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl sm:rounded-2xl">
                 <p className="text-orange-400 font-semibold text-sm">⚠️ Connect your wallet first</p>
               </div>
             )}
@@ -219,7 +219,7 @@ export default function SendToken() {
               <Button
                 onClick={loadTokens}
                 disabled={loading}
-                className="w-full mb-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-2xl"
+                className="w-full mb-4 sm:mb-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl sm:rounded-2xl"
               >
                 {loading ? 'Loading...' : 'Load My Tokens'}
               </Button>
@@ -230,7 +230,7 @@ export default function SendToken() {
               <Button
                 onClick={loadTokens}
                 disabled={loading}
-                className="w-full mb-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-sm"
+                className="w-full mb-3 sm:mb-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg sm:rounded-xl text-sm"
               >
                 {loading ? 'Refreshing...' : '🔄 Refresh Balances'}
               </Button>
@@ -238,14 +238,14 @@ export default function SendToken() {
 
             {/* Token selection */}
             {tokens.length > 0 && (
-              <div className="mb-6">
-                <label className="block text-white font-semibold mb-3">Select Token:</label>
+              <div className="mb-4 sm:mb-6">
+                <label className="block text-white font-semibold mb-2 sm:mb-3">Select Token:</label>
                 <div className="space-y-2">
                   {tokens.map((token) => (
                     <div
                       key={token.mint}
                       onClick={() => setSelectedToken(token)}
-                      className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                      className={`p-3 sm:p-4 border-2 rounded-lg sm:rounded-xl cursor-pointer transition-all ${
                         selectedToken?.mint === token.mint
                           ? 'border-purple-500 bg-purple-500/10'
                           : 'border-zinc-700 bg-zinc-800/30 hover:border-zinc-600'
@@ -253,12 +253,12 @@ export default function SendToken() {
                     >
                       <div className="flex justify-between items-center">
                         <div>
-                          <p className="text-white font-semibold">{token.name}</p>
-                          <p className="text-zinc-400 text-sm">{token.symbol}</p>
+                          <p className="text-white font-semibold text-sm sm:text-base">{token.name}</p>
+                          <p className="text-zinc-400 text-xs sm:text-sm">{token.symbol}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-white font-bold">{token.balance.toFixed(6)}</p>
-                          <p className="text-zinc-500 text-sm">{token.decimals} decimals</p>
+                          <p className="text-white font-bold text-sm sm:text-base">{token.balance.toFixed(6)}</p>
+                          <p className="text-zinc-500 text-xs">{token.decimals} decimals</p>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -278,7 +278,7 @@ export default function SendToken() {
 
             {/* Send form */}
             {selectedToken && (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {/* Recipient */}
                 <div>
                   <label className="block text-white font-semibold mb-2">Recipient Address:</label>
@@ -287,7 +287,7 @@ export default function SendToken() {
                     value={recipientAddress}
                     onChange={(e) => setRecipientAddress(e.target.value)}
                     placeholder="Enter Solana wallet address..."
-                    className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-lg sm:rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50 text-sm sm:text-base"
                   />
                 </div>
 
@@ -302,13 +302,13 @@ export default function SendToken() {
                       placeholder="0.00"
                       max={selectedToken.balance}
                       step="0.000001"
-                      className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-lg sm:rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50 text-sm sm:text-base"
                     />
-                    <span className="absolute right-4 top-3 text-zinc-400">
+                    <span className="absolute right-3 sm:right-4 top-2 sm:top-3 text-zinc-400 text-sm">
                       {selectedToken.symbol}
                     </span>
                   </div>
-                  <p className="text-zinc-500 text-sm mt-1">
+                  <p className="text-zinc-500 text-xs sm:text-sm mt-1">
                     Available: {selectedToken.balance.toFixed(6)} {selectedToken.symbol}
                   </p>
                 </div>
@@ -323,7 +323,7 @@ export default function SendToken() {
                         const newAmount = selectedToken.balance * p;
                         setAmount(newAmount.toFixed(6));
                       }}
-                      className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-sm"
+                      className="px-2 sm:px-3 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs sm:text-sm"
                     >
                       {percent}
                     </button>
@@ -334,13 +334,13 @@ export default function SendToken() {
 
             {/* Messages */}
             {message && (
-              <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+              <div className="mt-3 sm:mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg sm:rounded-xl">
                 <p className="text-blue-400 text-sm">{message}</p>
               </div>
             )}
 
             {error && (
-              <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+              <div className="mt-3 sm:mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg sm:rounded-xl">
                 <p className="text-red-400 text-sm">{error}</p>
               </div>
             )}
@@ -350,24 +350,24 @@ export default function SendToken() {
               <Button
                 onClick={handleSend}
                 disabled={loading || !recipientAddress || !amount || solBalance < 0.000005}
-                className="w-full mt-6 py-4 text-lg font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-2xl disabled:opacity-50"
+                className="w-full mt-4 sm:mt-6 py-3 sm:py-4 text-base sm:text-lg font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl sm:rounded-2xl disabled:opacity-50"
               >
                 {loading ? 'Processing...' : 'Send Tokens'}
               </Button>
             )}
 
             {/* Warnings */}
-            <div className="mt-6 space-y-3">
+            <div className="mt-4 sm:mt-6 space-y-2 sm:space-y-3">
               {solBalance < 0.000005 && solBalance > 0 && (
-                <div className="p-3 bg-orange-500/10 border border-orange-500/20 rounded-xl">
-                  <p className="text-orange-400 text-sm">
+                <div className="p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg sm:rounded-xl">
+                  <p className="text-orange-400 text-xs sm:text-sm">
                     ⚠️ <strong>Low SOL Balance:</strong> You need at least 0.000005 SOL for transaction fees.
                   </p>
                 </div>
               )}
               
-              <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl">
-                <p className="text-orange-400 text-sm">
+              <div className="p-3 sm:p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg sm:rounded-xl">
+                <p className="text-orange-400 text-xs sm:text-sm">
                   ⚠️ <strong>Warning:</strong> Double-check the recipient address. Transactions cannot be reversed!
                 </p>
               </div>
